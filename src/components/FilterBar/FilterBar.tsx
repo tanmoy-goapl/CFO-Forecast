@@ -45,10 +45,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           style={{ minWidth: 180 }}
           placeholder="Select accounts"
           optionLabelProp="label"
+          maxCount={5}
         >
           {availableAccounts.map(acc => (
             <Option key={acc} value={acc} label={acc}>
-              <span style={{ color: accountColor(acc), fontWeight: 600 }}>
+              <span style={{ fontWeight: 600 }}>
                 {acc}
               </span>
             </Option>

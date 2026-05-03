@@ -1,16 +1,25 @@
 import type { SeriesEntry, ChartDataPoint, FilterState, CashForecastResponse } from '../types/cashForecast';
 import { formatMonth } from './formatters';
 
+const COLOR_POOL = [
+  '#F59E0B',  // amber
+  '#10B981',  // emerald
+  '#EF4444',  // red
+  '#8B5CF6',  // violet
+  '#06B6D4',  // cyan
+];
+
 export const ACCOUNT_COLORS: Record<string, string> = {
-  HDFC:  '#185FA5',
-  ICICI: '#3B6D11',
-  SBI:   '#854F0B',
-  Total: '#1a1a1a',
+  Total: 'black',
 };
 
-/** Default fallback color if an account isn't in the map */
 export function accountColor(acc: string): string {
-  return ACCOUNT_COLORS[acc] ?? '#6B7280';
+  if (acc === 'Total') return ACCOUNT_COLORS.Total;
+  if (!ACCOUNT_COLORS[acc]) {
+    const idx = Object.keys(ACCOUNT_COLORS).filter(k => k !== 'Total').length;
+    ACCOUNT_COLORS[acc] = COLOR_POOL[idx % COLOR_POOL.length];
+  }
+  return ACCOUNT_COLORS[acc];
 }
 
 /**
@@ -29,18 +38,18 @@ export function buildChartData(
 ): ChartDataPoint[] {
   const { accounts, historicalMonths: hN, forecastMonths: fN } = filters;
 
-  const allActual  = data.total_series.filter(d => d.type === 'actual').slice(-hN);
+  const allActual = data.total_series.filter(d => d.type === 'actual').slice(-hN);
   const allForecast = data.total_series.filter(d => d.type === 'forecast').slice(0, fN);
-  const allMonths   = [...allActual, ...allForecast];
+  const allMonths = [...allActual, ...allForecast];
 
   return allMonths.map((row, idx) => {
-    const isForecast     = row.type === 'forecast';
-    const isLastActual   = idx === allActual.length - 1;
+    const isForecast = row.type === 'forecast';
+    const isLastActual = idx === allActual.length - 1;
 
     const point: ChartDataPoint = {
       month: row.month,
       label: formatMonth(row.month),
-      type:  row.type,
+      type: row.type,
     };
 
     let totalActVal = 0;
@@ -79,15 +88,15 @@ export function buildChartData(
 export function computeKPIs(data: CashForecastResponse, filters: FilterState) {
   const { accounts, historicalMonths: hN, forecastMonths: fN } = filters;
 
-  let currentBalance  = 0;
-  let totalInflow     = 0;
-  let totalOutflow    = 0;
+  let currentBalance = 0;
+  let totalInflow = 0;
+  let totalOutflow = 0;
   let forecastClosing = 0;
-  let nMonths         = 0;
+  let nMonths = 0;
 
   for (const acc of accounts) {
     const s = data.series[acc] ?? [];
-    const actual   = s.filter(d => d.type === 'actual').slice(-hN);
+    const actual = s.filter(d => d.type === 'actual').slice(-hN);
     const forecast = s.filter(d => d.type === 'forecast').slice(0, fN);
 
     if (actual.length) currentBalance += actual[actual.length - 1].closing_cash;
@@ -96,7 +105,7 @@ export function computeKPIs(data: CashForecastResponse, filters: FilterState) {
     if (forecast.length) forecastClosing += forecast[forecast.length - 1].closing_cash;
   }
 
-  const avgInflow  = nMonths ? totalInflow  / nMonths : 0;
+  const avgInflow = nMonths ? totalInflow / nMonths : 0;
   const avgOutflow = nMonths ? totalOutflow / nMonths : 0;
 
   // Label for the last forecast month
