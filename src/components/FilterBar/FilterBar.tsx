@@ -1,5 +1,5 @@
 import React from 'react';
-import { Select, Checkbox, Button } from 'antd';
+import { Select, Button } from 'antd';
 import { RefreshCw } from 'lucide-react';
 import type { FilterState } from '../../types/cashForecast';
 import { accountColor } from '../../utils/chartHelpers';

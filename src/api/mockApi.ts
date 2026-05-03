@@ -1,6 +1,6 @@
-// api.js
+import type { CashForecastResponse } from '../types/cashForecast';
 import { MOCK_RESPONSE } from '../data/mockData';
-export async function fetchCashForecast() {
-  // Swap this line for a real fetch() when backend is ready
-  return Promise.resolve(MOCK_RESPONSE);
+
+export async function fetchCashForecast(): Promise<CashForecastResponse> {
+  return MOCK_RESPONSE;
 }

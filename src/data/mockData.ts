@@ -1,4 +1,6 @@
-export const MOCK_RESPONSE = {
+import type { CashForecastResponse } from '../types/cashForecast';
+
+export const MOCK_RESPONSE: CashForecastResponse = {
     "status": "success",
     "kpis": {
         "current_cash_balance": 12500000,

@@ -9,7 +9,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from 'recharts';
-import type { TooltipProps } from 'recharts';
+import type { TooltipContentProps } from 'recharts';
 import { Checkbox } from 'antd';
 import type { ChartDataPoint, CashForecastResponse, FilterState } from '../../types/cashForecast';
 import { buildChartData, forecastStartIndex, accountColor, ACCOUNT_COLORS } from '../../utils/chartHelpers';
@@ -17,9 +17,12 @@ import { formatINR, formatINRShort } from '../../utils/formatters';
 
 /* ─── Custom Tooltip ──────────────────────────────────────────── */
 
-const CustomTooltip: React.FC<TooltipProps<number, string> & { accounts: string[]; showIndividual: boolean }> = ({
-  active, payload, label, accounts, showIndividual,
-}) => {
+const CustomTooltip: React.FC<
+  TooltipContentProps<any, any> & {
+    accounts: string[];
+    showIndividual: boolean;
+  }
+> = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
 
   // Deduplicate: only show _act keys (forecast values shown via _fct at bridge)
@@ -132,9 +135,14 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, filters }) =
               axisLine={false}
               width={54}
             />
-
             <Tooltip
-              content={<CustomTooltip accounts={filters.accounts} showIndividual={showIndividual} />}
+              content={(props) => (
+                <CustomTooltip
+                  {...props}
+                  accounts={filters.accounts}
+                  showIndividual={showIndividual}
+                />
+              )}
               cursor={{ stroke: '#E5E7EB', strokeWidth: 1 }}
             />
 
