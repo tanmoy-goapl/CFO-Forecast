@@ -2,7 +2,6 @@ import React from 'react';
 import { Select, Button } from 'antd';
 import { RefreshCw } from 'lucide-react';
 import type { FilterState } from '../../types/cashForecast';
-import { accountColor } from '../../utils/chartHelpers';
 
 const { Option } = Select;
 
@@ -45,7 +44,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           style={{ minWidth: 180 }}
           placeholder="Select accounts"
           optionLabelProp="label"
-          maxCount={5}
+          maxCount={3}
         >
           {availableAccounts.map(acc => (
             <Option key={acc} value={acc} label={acc}>

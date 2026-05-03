@@ -42,7 +42,7 @@ function App() {
         // default select all
         setFilters(prev =>
           prev.accounts.length === 0
-            ? { ...prev, accounts: res.accounts.slice(0, 5) }
+            ? { ...prev, accounts: res.accounts.slice(0, 3) }
             : prev
         );
       } catch (e) {
