@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Divider, Spin, Alert } from 'antd';
 import { BarChart2 } from 'lucide-react';
-import { fetchCashForecast } from './api/mockApi';
 import type { CashForecastResponse, FilterState } from './types/cashForecast';
 import { computeKPIs }     from './utils/chartHelpers';
 import { FilterBar } from './components/FilterBar/FilterBar';
@@ -9,6 +8,7 @@ import { KPICards } from './components/KPICards/KPICards';
 import { formatMonth } from './utils/formatters';
 import { CashFlowChart } from './components/CashFlowChart/CashFlowChart';
 import { CashFlowTable } from './components/CashFlowTable/CashFlowTable';
+import { fetchCashForecast } from './api/cashflowApi';
 
 const DEFAULT_FILTERS: FilterState = {
   accounts:        [],     // populated after first load
@@ -23,25 +23,34 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetchCashForecast();
-      setData(res);
-      // On first load, default to all accounts selected
-      setFilters(prev =>
-        prev.accounts.length === 0
-          ? { ...prev, accounts: res.meta.accounts_available }
-          : prev
-      );
-    } catch (e) {
-      setError('Failed to load cash forecast data.');
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+const load = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+
+  try {
+    // First call without accounts (or fallback)
+    const res = await fetchCashForecast(
+      filters.accounts.length
+        ? filters
+        : { ...filters, accounts: ['LEDGER_000030'] } // fallback
+    );
+
+    setData(res);
+
+    // Populate accounts after first load
+    setFilters(prev =>
+      prev.accounts.length === 0
+        ? { ...prev, accounts: res.meta.accounts_selected }
+        : prev
+    );
+
+  } catch (e) {
+    setError('Failed to load cash forecast data.');
+    console.error(e);
+  } finally {
+    setLoading(false);
+  }
+}, [filters]);
 
   useEffect(() => { load(); }, [load]);
 
