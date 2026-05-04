@@ -31,20 +31,19 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   /* ─── Load Accounts (ONCE) ─────────────────────────────── */
-
   useEffect(() => {
     const loadAccounts = async () => {
       try {
         const res = await fetchAccounts(1);
-
         setAvailableAccounts(res.accounts);
 
-        // default select all
-        setFilters(prev =>
-          prev.accounts.length === 0
-            ? { ...prev, accounts: res.accounts.slice(0, 3) }
-            : prev
-        );
+        // ❌ remove this block
+        // setFilters(prev =>
+        //   prev.accounts.length === 0
+        //     ? { ...prev, accounts: res.accounts.slice(0, 3) }
+        //     : prev
+        // );
+
       } catch (e) {
         console.error('Failed to load accounts', e);
         setError('Failed to load accounts');
