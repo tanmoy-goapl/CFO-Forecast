@@ -36,9 +36,9 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data, filters }) =
 
     for (const acc of accounts) {
       const entry: SeriesEntry | undefined = data.series[acc]?.find(e => e.month === row.month);
-      acctMap[acc] = entry?.closing_cash ?? null;
+      acctMap[acc] = entry?.net_cash_flow ?? null;
       if (entry) {
-        totalCash    += entry.closing_cash;
+        totalCash    += entry.net_cash_flow;
         totalInflow  += entry.inflow;
         totalOutflow += entry.outflow;
       }

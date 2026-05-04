@@ -57,7 +57,7 @@ export function buildChartData(
 
     for (const acc of accounts) {
       const entry: SeriesEntry | undefined = data.series[acc]?.find(s => s.month === row.month);
-      const val = entry?.closing_cash ?? null;
+      const val = entry?.net_cash_flow ?? null;
 
       if (!isForecast) {
         point[`${acc}_act`] = val;
@@ -99,10 +99,10 @@ export function computeKPIs(data: CashForecastResponse, filters: FilterState) {
     const actual = s.filter(d => d.type === 'actual').slice(-hN);
     const forecast = s.filter(d => d.type === 'forecast').slice(0, fN);
 
-    if (actual.length) currentBalance += actual[actual.length - 1].closing_cash;
+    if (actual.length) currentBalance += actual[actual.length - 1].net_cash_flow;
     actual.forEach(d => { totalInflow += d.inflow; totalOutflow += d.outflow; });
     if (nMonths === 0) nMonths = actual.length; // assume all accounts have same n
-    if (forecast.length) forecastClosing += forecast[forecast.length - 1].closing_cash;
+    if (forecast.length) forecastClosing += forecast[forecast.length - 1].net_cash_flow;
   }
 
   const avgInflow = nMonths ? totalInflow / nMonths : 0;

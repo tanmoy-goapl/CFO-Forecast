@@ -2,7 +2,7 @@ export type EntryType = 'actual' | 'forecast';
 
 export interface SeriesEntry {
   month: string; // "YYYY-MM"
-  closing_cash: number;
+  net_cash_flow: number;
   inflow: number;
   outflow: number;
   type: EntryType;
