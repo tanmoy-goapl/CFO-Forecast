@@ -55,10 +55,7 @@ function App() {
   }, []);
 
   /* ─── Load Forecast ────────────────────────────────────── */
-
   const load = useCallback(async () => {
-    if (!filters.accounts.length) return;
-
     setLoading(true);
     setError(null);
 
@@ -74,14 +71,20 @@ function App() {
   }, [filters]);
 
   useEffect(() => {
-    if (filters.accounts.length) {
-      load();
-    }
+    load();
   }, [filters, load]);
+
+  const effectiveAccounts =
+    filters.accounts.length > 0
+      ? filters.accounts
+      : data?.meta.accounts_selected ?? [];
 
   /* ─── KPIs ─────────────────────────────────────────────── */
 
-  const kpis = data ? computeKPIs(data, filters) : null;
+  const kpis = data ? computeKPIs(data, {
+    ...filters,
+    accounts: effectiveAccounts
+  }) : null;
 
   /* ─── Period Label ─────────────────────────────────────── */
 
@@ -162,24 +165,26 @@ function App() {
         )}
 
         {/* Chart + Table */}
-        {data && filters.accounts.length > 0 && (
+        {data && (
           <>
             <div className="bg-white border border-gray-200 rounded-lg px-5 py-4">
-              <CashFlowChart data={data} filters={filters} />
+              <CashFlowChart data={data} filters={{ ...filters, accounts: effectiveAccounts }} isAllAccounts={filters.accounts.length === 0}
+              />
             </div>
 
             <Divider className="my-5" />
 
-            <CashFlowTable data={data} filters={filters} />
+            <CashFlowTable data={data} filters={{ ...filters, accounts: effectiveAccounts }}
+            />
           </>
         )}
 
         {/* Empty State */}
-        {!filters.accounts.length && (
+        {/* {!filters.accounts.length && (
           <div className="text-center text-gray-400 py-16 text-sm">
             Select at least one account to view the forecast.
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

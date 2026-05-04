@@ -25,8 +25,12 @@ export async function fetchCashForecast(
     history_months: String(filters.historicalMonths),
     forecast_months: String(filters.forecastMonths),
     ma_window: String(filters.maWindow),
-    accounts: filters.accounts.join(','), // IMPORTANT
   });
+
+  // // Only add accounts if selected
+  // if (filters.accounts.length > 0) {
+  //   params.append('accounts', filters.accounts.join(','));
+  // }
 
   const res = await fetch(
     `${BASE_URL}/api/v1/cash-flow/historical?${params.toString()}`

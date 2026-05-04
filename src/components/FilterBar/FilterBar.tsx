@@ -39,12 +39,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <Select
           mode="multiple"
           size="small"
-          value={filters.accounts}
+          value={filters.accounts.length ? filters.accounts : undefined}
           onChange={(vals) => set('accounts', vals)}
           style={{ minWidth: 180 }}
-          placeholder="Select accounts"
+          placeholder="All Accounts"
           optionLabelProp="label"
-          maxCount={3}
+          maxCount={5}
+          maxTagPlaceholder={() => 'All Accounts'}
         >
           {availableAccounts.map(acc => (
             <Option key={acc} value={acc} label={acc}>

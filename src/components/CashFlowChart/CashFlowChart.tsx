@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   ComposedChart,
   Line,
@@ -87,9 +87,10 @@ const ChartLegend: React.FC<{ accounts: string[]; showIndividual: boolean }> = (
 interface CashFlowChartProps {
   data: CashForecastResponse;
   filters: FilterState;
+  isAllAccounts: boolean;
 }
 
-export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, filters }) => {
+export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, filters, isAllAccounts }) => {
   const [showIndividual, setShowIndividual] = useState(true);
 
   const chartData: ChartDataPoint[] = buildChartData(data, filters);
@@ -101,18 +102,27 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({ data, filters }) =
 
   const yFormatter = useCallback((v: number) => formatINRShort(v), []);
 
+
+  useEffect(() => {
+    if (isAllAccounts) {
+      setShowIndividual(false);
+    }
+  }, [isAllAccounts]);
+
   return (
     <div>
       {/* Chart header row */}
       <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
         <ChartLegend accounts={filters.accounts} showIndividual={showIndividual} />
-        <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none">
-          <Checkbox
-            checked={showIndividual}
-            onChange={e => setShowIndividual(e.target.checked)}
-          />
-          Show individual accounts
-        </label>
+        {!isAllAccounts && (
+          <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none">
+            <Checkbox
+              checked={showIndividual}
+              onChange={e => setShowIndividual(e.target.checked)}
+            />
+            Show individual accounts
+          </label>
+        )}
       </div>
 
       {/* Chart */}
