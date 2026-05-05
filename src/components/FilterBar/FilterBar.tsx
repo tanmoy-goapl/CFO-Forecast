@@ -1,5 +1,5 @@
 import React from 'react';
-import { Select, Button } from 'antd';
+import { Select, Button, Tooltip } from 'antd';
 import { RefreshCw } from 'lucide-react';
 import type { FilterState } from '../../types/cashForecast';
 
@@ -41,20 +41,42 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           size="small"
           value={filters.accounts.length ? filters.accounts : undefined}
           onChange={(vals) => set('accounts', vals)}
-          style={{ minWidth: 180 }}
+          style={{ minWidth: 250 }}
           placeholder="All Accounts"
           optionLabelProp="label"
-          maxCount={5}
+          maxCount={10}
           maxTagPlaceholder={() => 'All Accounts'}
         >
           {availableAccounts.map(acc => (
             <Option key={acc} value={acc} label={acc}>
-              <span style={{ fontWeight: 600 }}>
-                {acc}
-              </span>
+              <Tooltip title={acc}>
+                <span
+                  style={{
+                    fontWeight: 600,
+                    display: 'inline-block',
+                    maxWidth: 200,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    verticalAlign: 'bottom',
+                  }}
+                >
+                  {acc}
+                </span>
+              </Tooltip>
             </Option>
           ))}
         </Select>
+        {filters.accounts.length >= 2 && (
+          <Button
+            size="small"
+            type="text"
+            onClick={() => set('accounts', [])}
+            className="text-gray-500 hover:text-red-500"
+          >
+            Clear
+          </Button>
+        )}
       </div>
       <div className="w-px h-5 bg-gray-200" />
 

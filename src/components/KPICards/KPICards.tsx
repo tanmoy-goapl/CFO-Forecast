@@ -1,19 +1,18 @@
 import React from 'react';
 import { Wallet, TrendingUp, TrendingDown, Target } from 'lucide-react';
-import { formatINR } from '../../utils/formatters';
 
 interface KPICardsProps {
-  currentBalance:  number;
-  avgInflow:       number;
-  avgOutflow:      number;
-  forecastClosing: number;
+  currentBalance:  string;
+  avgInflow:       string;
+  avgOutflow:      string;
+  forecastClosing: string;
   forecastLabel:   string;
   historicalMonths: number;
 }
 
 interface CardConfig {
   label:    string;
-  value:    number;
+  value:    string;
   sub:      string;
   icon:     React.ReactNode;
   accent?:  string; // tailwind border-l color class
@@ -36,13 +35,13 @@ export const KPICards: React.FC<KPICardsProps> = ({
     },
     {
       label:  'Avg Monthly Inflow',
-      value:  Math.round(avgInflow),
+      value:  avgInflow,
       sub:    `Avg over ${historicalMonths} months`,
       icon:   <TrendingUp size={16} className="text-green-500" />,
     },
     {
       label:  'Avg Monthly Outflow',
-      value:  Math.round(avgOutflow),
+      value:  avgOutflow,
       sub:    `Avg over ${historicalMonths} months`,
       icon:   <TrendingDown size={16} className="text-red-400" />,
     },
@@ -69,7 +68,7 @@ export const KPICards: React.FC<KPICardsProps> = ({
             {card.icon}
           </div>
           <div className="text-[22px] font-medium text-gray-900 tabular-nums leading-tight">
-            {formatINR(card.value)}
+            {card.value}
           </div>
           <div className="text-[11px] text-gray-400 mt-1">{card.sub}</div>
         </div>

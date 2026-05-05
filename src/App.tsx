@@ -80,10 +80,8 @@ function App() {
 
   /* ─── KPIs ─────────────────────────────────────────────── */
 
-  const kpis = data ? computeKPIs(data, {
-    ...filters,
-    accounts: effectiveAccounts
-  }) : null;
+  const kpis = computeKPIs(data);
+  console.log(kpis)
 
   /* ─── Period Label ─────────────────────────────────────── */
 
