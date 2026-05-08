@@ -54,7 +54,7 @@ export function buildChartData(
   const allForecast = data.total_series.filter(d => d.type === 'forecast').slice(0, fN);
   const allMonths = [...allActual, ...allForecast];
 
-  return allMonths.map((row, idx) => {
+  return allMonths?.map((row, idx) => {
     const isForecast = row.type === 'forecast';
     const isLastActual = !isForecast && idx === allActual.length - 1;
 

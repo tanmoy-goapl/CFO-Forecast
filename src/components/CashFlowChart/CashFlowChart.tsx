@@ -70,7 +70,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 text-xs">
       <p className="font-medium text-gray-700 mb-2">{label}</p>
 
-      {items.map((it) => (
+      {items?.map((it) => (
         <div key={it.name} className="flex justify-between items-center gap-4 py-0.5">
           <span className="flex items-center gap-1.5 text-gray-600" title={it.name}>
             <span
@@ -104,7 +104,7 @@ const ChartLegend: React.FC<{ accounts: string[]; showIndividual: boolean }> = (
 }) => (
   <div className="flex flex-wrap gap-4 items-center text-xs text-gray-600">
     {showIndividual &&
-      accounts.map(acc => (
+      accounts?.map(acc => (
         <span key={acc} className="flex items-center gap-1.5" title={acc}>
           <span
             className="inline-block w-5 h-0.5 rounded flex-shrink-0"
@@ -163,6 +163,10 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
   const accLines = showIndividual ? filters.accounts : [];
   const yFormatter = useCallback((v: number) => formatINRShort(v), []);
 
+  useEffect(() => {
+    if (filters.accounts.length > 0) setShowIndividual(true);
+  }, [filters.accounts]);
+
   return (
     <div>
       {/* Header row */}
@@ -175,7 +179,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
               checked={showIndividual}
               onChange={e => setShowIndividual(e.target.checked)}
             />
-            Show individual accounts
+            Show Individual Accounts
           </label>
         )}
       </div>
@@ -231,7 +235,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
             )}
 
             {/* Per-account lines */}
-            {accLines.map(acc => (
+            {accLines?.map(acc => (
               <React.Fragment key={acc}>
                 <Line
                   dataKey={`${acc}_act`}

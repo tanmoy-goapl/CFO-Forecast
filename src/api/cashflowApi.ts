@@ -11,7 +11,14 @@ export async function fetchAccounts(companyId: number) {
 
   if (!res.ok) throw new Error('Failed to fetch accounts');
 
-  return res.json(); // { company_id, accounts, total }
+  const data = await res.json();
+
+  // normalize API response
+  return {
+    company_id: data.company_id,
+    accounts: data.parties ?? [],
+    total: data.total,
+  };
 }
 
 /* ─── Fetch Forecast ───────────────────────────────────────── */
@@ -27,10 +34,10 @@ export async function fetchCashForecast(
     ma_window: String(filters.maWindow),
   });
 
-  // // Only add accounts if selected
-  // if (filters.accounts.length > 0) {
-  //   params.append('accounts', filters.accounts.join(','));
-  // }
+  // Only add accounts if selected
+  if (filters.accounts.length > 0) {
+    params.append('accounts', filters.accounts.join(','));
+  }
 
   const res = await fetch(
     `${BASE_URL}/api/v1/cash-flow/historical?${params.toString()}`

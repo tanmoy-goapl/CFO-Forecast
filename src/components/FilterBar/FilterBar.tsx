@@ -47,7 +47,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           maxCount={10}
           maxTagPlaceholder={() => 'All Accounts'}
         >
-          {availableAccounts.map(acc => (
+          {availableAccounts?.map(acc => (
             <Option key={acc} value={acc} label={acc}>
               <Tooltip title={acc}>
                 <span
@@ -91,7 +91,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           onChange={v => set('historicalMonths', v)}
           style={{ width: 72 }}
         >
-          {PERIOD_OPTIONS.map(n => <Option key={n} value={n}>{n}M</Option>)}
+          {PERIOD_OPTIONS?.map(n => <Option key={n} value={n}>{n}M</Option>)}
         </Select>
       </div>
 
@@ -106,7 +106,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           onChange={v => set('forecastMonths', v)}
           style={{ width: 72 }}
         >
-          {PERIOD_OPTIONS.map(n => <Option key={n} value={n}>{n}M</Option>)}
+          {PERIOD_OPTIONS?.map(n => <Option key={n} value={n}>{n}M</Option>)}
         </Select>
       </div>
 
@@ -121,7 +121,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           onChange={v => set('maWindow', v)}
           style={{ width: 64 }}
         >
-          {MA_OPTIONS.map(n => <Option key={n} value={n}>{n}M</Option>)}
+          {MA_OPTIONS?.map(n => <Option key={n} value={n}>{n}M</Option>)}
         </Select>
       </div>
 
