@@ -12,15 +12,8 @@ interface TableRow {
   month: string;
   monthLabel: string;
   type: 'actual' | 'forecast';
-  /**
-   * Net cash flow for the row's month taken directly from total_series.
-   * This is what the chart plots and what the user asked to see.
-   */
   totalNetCashFlow: number;
-  /**
-   * Per-account net_cash_flow values (may be null if the account had
-   * no activity in this month).
-   */
+  selectedTotal: number | null; // sum across selected accounts (null if none selected)
   accounts: Record<string, number | null>;
 }
 
@@ -34,20 +27,36 @@ interface CashFlowTableProps {
 export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data, filters }) => {
   const { accounts, historicalMonths: hN, forecastMonths: fN } = filters;
 
+  console.log(data);
+
+  const hasSelection = accounts.length > 0;
+
+  // ── Fall back to all series keys when no accounts are selected ─
+  const activeAccounts = hasSelection ? accounts : Object.keys(data.series);
+
   // ── Slice to the same window shown in the chart ───────────────
   const actual = data.total_series.filter(d => d.type === 'actual').slice(-hN);
   const forecast = data.total_series.filter(d => d.type === 'forecast').slice(0, fN);
   const allRows = [...actual, ...forecast];
 
   // ── Build rows ────────────────────────────────────────────────
-  const rows: TableRow[] = allRows?.map(row => {
+  const rows: TableRow[] = allRows.map(row => {
     const acctMap: Record<string, number | null> = {};
 
-    for (const acc of accounts) {
+    for (const acc of activeAccounts) {
       const entry: SeriesEntry | undefined =
         data.series[acc]?.find(e => e.month === row.month);
-      // net_cash_flow (monthly delta), not closing_cash
       acctMap[acc] = entry?.net_cash_flow ?? null;
+    }
+
+    // Sum only when accounts are explicitly selected
+    let selectedTotal: number | null = null;
+    if (hasSelection) {
+      const values = accounts.map(acc => acctMap[acc]);
+      const allNull = values.every(v => v == null);
+      selectedTotal = allNull
+        ? null
+        : values.reduce<number>((sum, v) => sum + (v ?? 0), 0);
     }
 
     return {
@@ -55,12 +64,8 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data, filters }) =
       month: row.month,
       monthLabel: formatMonthLong(row.month),
       type: row.type,
-      // ✅ KEY FIX: comes directly from total_series, not summed from accounts.
-      //    Previously the code summed entry.net_cash_flow across accounts AND
-      //    separately computed totalInflow − totalOutflow — both producing the
-      //    same number and neither matching total_series when accounts had
-      //    sparse data or when accounts=[] (all-accounts mode).
       totalNetCashFlow: row.net_cash_flow,
+      selectedTotal,
       accounts: acctMap,
     };
   });
@@ -76,15 +81,14 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data, filters }) =
       render: (v: string) => <span>{v}</span>,
     },
 
-    // One column per selected account
-    ...accounts?.map(acc => ({
+    // One column per active account
+    ...activeAccounts.map(acc => ({
       title: (
         <span
           className="text-[12px] font-medium"
           style={{ color: accountColor(acc) }}
           title={acc}
         >
-          {/* Truncate long bank names in the header */}
           {acc.length > 28 ? `${acc.slice(0, 26)}…` : acc}
         </span>
       ),
@@ -102,13 +106,39 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data, filters }) =
       ),
     })),
 
-    // ✅ Total Net Cash Flow — from total_series.net_cash_flow
+    // ── Selected accounts subtotal (only when accounts are chosen) ─
+    ...(hasSelection
+      ? [
+        {
+          title: <strong>Selected Total</strong>,
+          dataIndex: 'selectedTotal',
+          key: 'selectedTotal',
+          align: 'right' as const,
+          width: 150,
+          fixed: 'right' as const,
+          render: (v: number | null) =>
+            v == null ? (
+              <span className="tabular-nums text-[12px]" style={{ color: '#9CA3AF' }}>—</span>
+            ) : (
+              <span
+                className="font-semibold tabular-nums text-[12px]"
+                style={{ color: v >= 0 ? '#1D4ED8' : '#9333EA' }}
+              >
+                {v >= 0 ? '+' : ''}{formatINR(v)}
+              </span>
+            ),
+        },
+      ]
+      : []),
+
+    // ── Total Net Cash Flow (from total_series) ───────────────────
     {
       title: <strong>Total Net Cash Flow</strong>,
       dataIndex: 'totalNetCashFlow',
       key: 'totalNetCashFlow',
       align: 'right',
-      width: 150,
+      width: 120,
+      fixed: 'right',
       render: (v: number) => (
         <span
           className="font-semibold tabular-nums text-[12px]"
@@ -119,11 +149,13 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data, filters }) =
       ),
     },
 
+    // ── Type badge ────────────────────────────────────────────────
     {
       title: 'Type',
       key: 'type',
       width: 90,
       align: 'center' as const,
+      fixed: 'right' as const,
       render: (_: unknown, row: TableRow) =>
         row.type === 'actual'
           ? <Tag color="success" style={{ fontSize: 11 }}>Actual</Tag>
@@ -137,10 +169,12 @@ export const CashFlowTable: React.FC<CashFlowTableProps> = ({ data, filters }) =
       dataSource={rows}
       size="small"
       pagination={false}
-      scroll={{ x: 'max-content' }}
-      rowClassName={row =>
-        row.type === 'forecast' ? 'bg-blue-50/40' : ''
-      }
+      scroll={{
+        x: 'max-content',
+        y: 450,
+      }}
+      sticky // sticky header
+      rowClassName={row => (row.type === 'forecast' ? 'bg-blue-50/40' : '')}
       style={{ fontSize: 13 }}
     />
   );

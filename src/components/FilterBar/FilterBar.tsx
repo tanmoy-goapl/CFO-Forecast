@@ -70,9 +70,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         {filters.accounts.length >= 2 && (
           <Button
             size="small"
-            type="text"
+            type="primary"
             onClick={() => set('accounts', [])}
-            className="text-gray-500 hover:text-red-500"
           >
             Clear
           </Button>

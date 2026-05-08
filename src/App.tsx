@@ -81,7 +81,6 @@ function App() {
   /* ─── KPIs ─────────────────────────────────────────────── */
 
   const kpis = computeKPIs(data);
-  console.log(kpis)
 
   /* ─── Period Label ─────────────────────────────────────── */
 
