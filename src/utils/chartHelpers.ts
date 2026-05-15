@@ -4,16 +4,16 @@ import { formatMonth } from './formatters';
 /* ─── Colour palette ─────────────────────────────────────────── */
 
 const COLOR_POOL = [
-  '#2563EB', // blue
-  '#16A34A', // green
-  '#DC2626', // red
-  '#CA8A04', // yellow (mustard)
-  '#7C3AED', // purple
-  '#0891B2', // teal
-  '#EA580C', // orange
-  '#4B5563', // slate (neutral)
-  '#BE185D', // rose (deeper than pink)
-  '#0F766E', // dark teal (distinct from cyan)
+  '#d18590', // vivid crimson
+  '#ec6a12', // strong orange
+  '#f5c929', // bright yellow
+  '#50ca69', // rich green
+  '#005d41', // teal green
+  '#38abbf', // deep cyan
+  '#1864AB', // saturated blue
+  '#784ef7', // indigo
+  '#770e91', // vivid purple
+  '#ba0645', // magenta pink
 ];
 
 export const ACCOUNT_COLORS: Record<string, string> = {

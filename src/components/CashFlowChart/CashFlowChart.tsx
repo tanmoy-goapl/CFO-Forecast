@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   ComposedChart,
+  Bar,
   Line,
   XAxis,
   YAxis,
@@ -31,6 +32,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
   active,
   payload,
   label,
+  showIndividual,
 }) => {
   if (!active || !payload?.length) return null;
 
@@ -41,6 +43,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
     value: number;
     color: string;
     isForecast: boolean;
+    isTotal: boolean;
   }[] = [];
 
   payload.forEach((p) => {
@@ -57,41 +60,82 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
       value: Number(p.value),
       color: ACCOUNT_COLORS[base] ?? '#999',
       isForecast: key.endsWith('_fct'),
+      isTotal: base === 'Total',
     });
   });
 
-  items.sort(
-    (a, b) =>
-      (a.name.startsWith('Total') ? 1 : 0) -
-      (b.name.startsWith('Total') ? 1 : 0)
-  );
+  // Sort: individual accounts first, Total last
+  items.sort((a, b) => (a.isTotal ? 1 : 0) - (b.isTotal ? 1 : 0));
+
+  const accountItems = items.filter(it => !it.isTotal);
+  const totalItems = items.filter(it => it.isTotal);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 text-xs">
+    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 text-xs min-w-[200px]">
       <p className="font-medium text-gray-700 mb-2">{label}</p>
 
-      {items?.map((it) => (
-        <div key={it.name} className="flex justify-between items-center gap-4 py-0.5">
-          <span className="flex items-center gap-1.5 text-gray-600" title={it.name}>
-            <span
-              className="w-2.5 h-2.5 rounded-full inline-block"
-              style={{ background: it.color }}
-            />
-            {it.name}
-            {it.isForecast && (
-              <span className="text-[9px] text-blue-400 ml-0.5">est.</span>
-            )}
-          </span>
+      {showIndividual && accountItems.length > 0 && (
+        <>
+          <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">
+            Accounts (left axis)
+          </p>
+          {accountItems.map((it) => (
+            <div key={it.name} className="flex justify-between items-center gap-4 py-0.5">
+              <span className="flex items-center gap-1.5 text-gray-600 truncate" title={it.name}>
+                <span
+                  className="w-2.5 h-2.5 rounded-sm inline-block flex-shrink-0"
+                  style={{ background: it.color }}
+                />
+                <span className="truncate max-w-[120px]">{it.name}</span>
+                {it.isForecast && (
+                  <span className="text-[9px] text-blue-400 ml-0.5 flex-shrink-0">est.</span>
+                )}
+              </span>
+              <span
+                className="font-semibold tabular-nums flex-shrink-0"
+                style={{ color: it.value >= 0 ? '#3B6D11' : '#A32D2D' }}
+              >
+                {it.value >= 0 ? '+' : ''}
+                {formatINR(it.value)}
+              </span>
+            </div>
+          ))}
+          {totalItems.length > 0 && (
+            <div className="border-t border-gray-100 mt-2 pt-2" />
+          )}
+        </>
+      )}
 
-          <span
-            className="font-semibold tabular-nums"
-            style={{ color: it.value >= 0 ? '#3B6D11' : '#A32D2D' }}
-          >
-            {it.value >= 0 ? '+' : ''}
-            {formatINR(it.value)}
-          </span>
-        </div>
-      ))}
+      {totalItems.length > 0 && (
+        <>
+          {showIndividual && accountItems.length > 0 && (
+            <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">
+              Total (right axis)
+            </p>
+          )}
+          {totalItems.map((it) => (
+            <div key={it.name} className="flex justify-between items-center gap-4 py-0.5">
+              <span className="flex items-center gap-1.5 text-gray-600">
+                <span
+                  className="w-2.5 h-0.5 inline-block flex-shrink-0 rounded"
+                  style={{ background: it.color }}
+                />
+                <strong className="font-medium">{it.name}</strong>
+                {it.isForecast && (
+                  <span className="text-[9px] text-blue-400 ml-0.5">est.</span>
+                )}
+              </span>
+              <span
+                className="font-semibold tabular-nums"
+                style={{ color: it.value >= 0 ? '#3B6D11' : '#A32D2D' }}
+              >
+                {it.value >= 0 ? '+' : ''}
+                {formatINR(it.value)}
+              </span>
+            </div>
+          ))}
+        </>
+      )}
     </div>
   );
 };
@@ -106,8 +150,9 @@ const ChartLegend: React.FC<{ accounts: string[]; showIndividual: boolean }> = (
     {showIndividual &&
       accounts?.map(acc => (
         <span key={acc} className="flex items-center gap-1.5" title={acc}>
+          {/* Stacked bar swatch */}
           <span
-            className="inline-block w-5 h-0.5 rounded flex-shrink-0"
+            className="inline-block w-3 h-3 rounded-sm flex-shrink-0"
             style={{ background: accountColor(acc) }}
           />
           <AntdTooltip title={acc}>
@@ -135,6 +180,15 @@ const ChartLegend: React.FC<{ accounts: string[]; showIndividual: boolean }> = (
       </svg>
       <span className="text-gray-800">Forecast</span>
     </span>
+
+    {showIndividual && accounts.length > 0 && (
+      <>
+        <span className="text-gray-300">|</span>
+        <span className="text-[10px] text-gray-400">
+          Bars → left axis &nbsp;·&nbsp; Line → right axis
+        </span>
+      </>
+    )}
   </div>
 );
 
@@ -157,15 +211,20 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
     if (isAllAccounts) setShowIndividual(false);
   }, [isAllAccounts]);
 
-  const chartData: ChartDataPoint[] = buildChartData(data, filters);
-  const fsi = forecastStartIndex(data, filters.historicalMonths);
-  const fcastRefMonth = chartData[fsi]?.label;
-  const accLines = showIndividual ? filters.accounts : [];
-  const yFormatter = useCallback((v: number) => formatINRShort(v), []);
-
   useEffect(() => {
     if (filters.accounts.length > 0) setShowIndividual(true);
   }, [filters.accounts]);
+
+  const chartData: ChartDataPoint[] = buildChartData(data, filters);
+  const fsi = forecastStartIndex(data, filters.historicalMonths);
+  const fcastRefMonth = chartData[fsi]?.label;
+
+  // When showIndividual is active, accounts go as stacked bars on left axis;
+  // Total stays as a line on the right axis. Otherwise, single-axis line chart.
+  const useDualAxis = showIndividual && filters.accounts.length > 0;
+
+  const yLeftFormatter = useCallback((v: number) => formatINRShort(v), []);
+  const yRightFormatter = useCallback((v: number) => formatINRShort(v), []);
 
   return (
     <div>
@@ -189,7 +248,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
-            margin={{ top: 8, right: 12, bottom: 0, left: 8 }}
+            margin={{ top: 8, right: useDualAxis ? 64 : 12, bottom: 0, left: 8 }}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
 
@@ -200,13 +259,48 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
               axisLine={false}
               interval="preserveStartEnd"
             />
+
+            {/* Left Y-axis — account bars (or sole axis when not dual) */}
             <YAxis
-              tickFormatter={yFormatter}
+              yAxisId="left"
+              orientation="left"
+              tickFormatter={yLeftFormatter}
               tick={{ fontSize: 11, fill: '#9CA3AF' }}
               tickLine={false}
               axisLine={false}
               width={60}
+              label={
+                useDualAxis
+                  ? {
+                    value: 'Accounts',
+                    angle: -90,
+                    position: 'insideLeft',
+                    offset: 10,
+                    style: { fontSize: 10, fill: '#9CA3AF' },
+                  }
+                  : undefined
+              }
             />
+
+            {/* Right Y-axis — Total line (only when dual axis mode) */}
+            {useDualAxis && (
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                tickFormatter={yRightFormatter}
+                tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                tickLine={false}
+                axisLine={false}
+                width={64}
+                label={{
+                  value: 'Total',
+                  angle: 90,
+                  position: 'insideRight',
+                  offset: 10,
+                  style: { fontSize: 10, fill: '#9CA3AF' },
+                }}
+              />
+            )}
 
             <Tooltip
               content={(props) => (
@@ -221,6 +315,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
             {fcastRefMonth && (
               <ReferenceLine
                 x={fcastRefMonth}
+                yAxisId="left"
                 stroke="#93C5FD"
                 strokeDasharray="4 3"
                 strokeWidth={1.5}
@@ -234,33 +329,40 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
               />
             )}
 
-            {/* Per-account lines */}
-            {accLines?.map(acc => (
-              <React.Fragment key={acc}>
-                <Line
-                  dataKey={`${acc}_act`}
-                  stroke={accountColor(acc)}
-                  strokeWidth={1.5}
-                  dot={false}
-                  activeDot={{ r: 4 }}
-                  connectNulls={false}
-                  name={acc}
-                />
-                <Line
-                  dataKey={`${acc}_fct`}
-                  stroke={accountColor(acc)}
-                  strokeWidth={1.5}
-                  strokeDasharray="5 4"
-                  dot={false}
-                  activeDot={false}
-                  connectNulls={false}
-                  legendType="none"
-                />
-              </React.Fragment>
-            ))}
+            {/* ── Stacked bars per account (left axis) ── */}
+            {useDualAxis &&
+              filters.accounts.map(acc => (
+                <React.Fragment key={acc}>
+                  {/* Actual segment */}
+                  <Bar
+                    yAxisId="left"
+                    dataKey={`${acc}_act`}
+                    name={acc}
+                    stackId="accounts"
+                    fill={accountColor(acc)}
+                    fillOpacity={0.85}
+                    radius={0}
+                    maxBarSize={28}
+                    isAnimationActive={false}
+                  />
+                  {/* Forecast segment — slightly desaturated / hatched via opacity */}
+                  <Bar
+                    yAxisId="left"
+                    dataKey={`${acc}_fct`}
+                    name={`${acc} (est.)`}
+                    stackId="accounts"
+                    fill={accountColor(acc)}
+                    fillOpacity={0.4}
+                    radius={0}
+                    maxBarSize={28}
+                    isAnimationActive={false}
+                  />
+                </React.Fragment>
+              ))}
 
-            {/* Total lines — always shown */}
+            {/* ── Total lines — bound to right axis when dual, left axis otherwise ── */}
             <Line
+              yAxisId={useDualAxis ? 'right' : 'left'}
               dataKey="Total_act"
               stroke={ACCOUNT_COLORS.Total}
               strokeWidth={2.5}
@@ -270,6 +372,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
               name="Total Net Cash Flow"
             />
             <Line
+              yAxisId={useDualAxis ? 'right' : 'left'}
               dataKey="Total_fct"
               stroke={ACCOUNT_COLORS.Total}
               strokeWidth={2.5}
