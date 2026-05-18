@@ -18,8 +18,8 @@ export interface KPIs {
   avg_monthly_outflow_display: string;
   avg_net_cash_flow: number;
   avg_net_cash_flow_display: string;
-  forecast_closing_cash: number;
-  forecast_closing_cash_display: string;
+  forecast_net_cash_flow: number;
+  forecast_net_cash_flow_display: string;
   forecast_period_label: string;
   historical_period_label: string;
 }

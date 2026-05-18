@@ -46,7 +46,7 @@ export const KPICards: React.FC<KPICardsProps> = ({
       icon: <TrendingDown size={16} className="text-red-400" />,
     },
     {
-      label: 'Forecast Closing Cash',
+      label: 'Forecast Net Cash Flow',
       value: forecastClosing,
       sub: forecastLabel ? `Projected by ${forecastLabel}` : '—',
       icon: <Target size={16} className="text-blue-500" />,

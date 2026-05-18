@@ -119,7 +119,7 @@ export function computeKPIs(
     currentBalance: data.kpis.current_cash_balance_display,
     avgInflow: data.kpis.avg_monthly_inflow_display,
     avgOutflow: data.kpis.avg_monthly_outflow_display,
-    forecastClosing: data.kpis.forecast_closing_cash_display,
+    forecastClosing: data.kpis.forecast_net_cash_flow_display,
     forecastLabel: data.kpis.forecast_period_label,
   };
 }
