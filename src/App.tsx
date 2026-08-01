@@ -1,186 +1,78 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Divider, Spin, Alert } from 'antd';
-import { BarChart2 } from 'lucide-react';
+import { useMemo, useState } from "react";
+import { Alert, Empty } from "antd";
+import { useCashFlowData } from "./hooks/useCashflowData";
+import { KpiRow } from "./components/KpiRow";
+import { LedgerChart } from "./components/LedgerChart";
+import { ModeToggle } from "./components/ModeToggle";
+import { BreakdownTable } from "./components/BreakdownTable";
+import { LiveForecastCard } from "./components/LiveForecastCard";
+import type { ForecastMode, MonthString } from "./types/cashflow";
 
-import type { CashForecastResponse, FilterState } from './types/cashForecast';
-import { computeKPIs } from './utils/chartHelpers';
-import { formatMonth } from './utils/formatters';
-
-import { FilterBar } from './components/FilterBar/FilterBar';
-import { KPICards } from './components/KPICards/KPICards';
-import { CashFlowChart } from './components/CashFlowChart/CashFlowChart';
-import { CashFlowTable } from './components/CashFlowTable/CashFlowTable';
-
-import { fetchCashForecast, fetchAccounts } from './api/cashflowApi';
-
-/* ─────────────────────────────────────────────────────────── */
-
-const DEFAULT_FILTERS: FilterState = {
-  accounts: [],
-  historicalMonths: 12,
-  forecastMonths: 3,
-  maWindow: 3,
+// Backtest accuracy from the API docs (section 10). Only 1-month mode has a
+// published direction-accuracy figure; swap this for a live value if the
+// API starts serving it per-mode.
+const DIRECTION_ACCURACY: Partial<Record<ForecastMode, number>> = {
+  "1month": 69.2,
 };
 
 function App() {
-  const [data, setData] = useState<CashForecastResponse | null>(null);
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
-  const [availableAccounts, setAvailableAccounts] = useState<string[]>([]);
+  const [mode, setMode] = useState<ForecastMode>("1month");
+  const [selectedMonth, setSelectedMonth] = useState<MonthString | null>(null);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isNoData, loading, error, refetch } = useCashFlowData(mode);
 
-  /* ─── Load Accounts (ONCE) ─────────────────────────────── */
-  useEffect(() => {
-    const loadAccounts = async () => {
-      try {
-        const res = await fetchAccounts(1);
-        setAvailableAccounts(res.accounts);
+  const latestMonth = useMemo(() => {
+    if (!data?.months.length) return null;
+    return data.months[data.months.length - 1] as MonthString;
+  }, [data]);
 
-        // ❌ remove this block
-        // setFilters(prev =>
-        //   prev.accounts.length === 0
-        //     ? { ...prev, accounts: res.accounts.slice(0, 3) }
-        //     : prev
-        // );
-
-      } catch (e) {
-        console.error('Failed to load accounts', e);
-        setError('Failed to load accounts');
-      }
-    };
-
-    loadAccounts();
-  }, []);
-
-  /* ─── Load Forecast ────────────────────────────────────── */
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetchCashForecast(filters);
-      setData(res);
-    } catch (e) {
-      console.error(e);
-      setError('Failed to load cash forecast data.');
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
-
-  useEffect(() => {
-    load();
-  }, [filters, load]);
-
-  const effectiveAccounts =
-    filters.accounts.length > 0
-      ? filters.accounts
-      : data?.meta.accounts_selected ?? [];
-
-  /* ─── KPIs ─────────────────────────────────────────────── */
-
-  const kpis = computeKPIs(data);
-
-  /* ─── Period Label ─────────────────────────────────────── */
-
-  const periodLabel = (() => {
-    if (!data) return '';
-
-    const act = data.total_series
-      .filter(d => d.type === 'actual')
-      .slice(-filters.historicalMonths);
-
-    const fct = data.total_series
-      .filter(d => d.type === 'forecast')
-      .slice(0, filters.forecastMonths);
-
-    if (!act.length) return '';
-
-    const end = fct.length
-      ? fct[fct.length - 1].month
-      : act[act.length - 1].month;
-
-    return `${formatMonth(act[0].month)} – ${formatMonth(end)}`;
-  })();
-
-  /* ─────────────────────────────────────────────────────── */
+  const activeMonth = selectedMonth ?? latestMonth;
+  const activeTotals = activeMonth ? data?.totals[activeMonth] ?? null : null;
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-6xl mx-auto px-6 py-6">
-
-        {/* Header */}
-        <div className="flex items-start justify-between mb-5">
-          <div className="flex items-center gap-2.5">
-            <BarChart2 size={20} className="text-blue-600 mt-0.5" />
-            <div>
-              <h1 className="text-[17px] font-medium text-gray-900">
-                Cash Flow Forecast
-              </h1>
-              <p className="text-xs text-gray-400">{periodLabel}</p>
-            </div>
-          </div>
-
-          {data?.meta.as_of_date && (
-            <span className="text-[11px] text-gray-400 bg-gray-50 border border-gray-200 rounded px-2.5 py-1">
-              As of {data.meta.as_of_date}
-            </span>
-          )}
+    <div className="min-h-screen bg-slate-50">
+      <div className="flex flex-col gap-2 max-w-5xl mx-auto p-4 sm:p-6">
+        <div className="mb-2">
+          <h1 className="text-xl font-medium m-0 text-slate-900">Cash flow forecast</h1>
+          <p className="text-sm text-slate-500 m-0">
+            Accounts receivable and payable, actual vs. model prediction
+          </p>
         </div>
 
-        {/* Error */}
-        {error && <Alert type="error" message={error} className="mb-4" />}
+        <LiveForecastCard />
 
-        {/* Filters */}
-        <FilterBar
-          availableAccounts={availableAccounts}
-          filters={filters}
-          onChange={setFilters}
-          onGenerate={load}
-          loading={loading}
+        <ModeToggle
+          mode={mode}
+          onChange={(next) => {
+            setMode(next);
+            setSelectedMonth(null);
+          }}
         />
 
-        {/* KPIs */}
-        {kpis && (
-          <KPICards
-            currentBalance={kpis.currentBalance}
-            avgInflow={kpis.avgInflow}
-            avgOutflow={kpis.avgOutflow}
-            forecastClosing={kpis.forecastClosing}
-            forecastLabel={kpis.forecastLabel}
-            historicalMonths={filters.historicalMonths}
-          />
-        )}
+        {error && <Alert type="error" message={error} showIcon closable className="mb-4" onClose={refetch} />}
 
-        {/* Loading */}
-        {loading && !data && (
-          <div className="flex justify-center py-20">
-            <Spin size="large" />
+        {!error && isNoData && (
+          <div className="py-10 bg-white border border-slate-200 rounded-xl">
+            <Empty description="No data available for this view yet" />
           </div>
         )}
 
-        {/* Chart + Table */}
-        {data && (
+        {!error && !isNoData && (
           <>
-            <div className="bg-white border border-gray-200 rounded-lg px-5 py-4">
-              <CashFlowChart data={data} filters={{ ...filters, accounts: effectiveAccounts }} isAllAccounts={filters.accounts.length === 0}
-              />
-            </div>
-
-            <Divider className="my-5" />
-
-            <CashFlowTable data={data} filters={{ ...filters, accounts: effectiveAccounts }}
+            <KpiRow
+              totals={activeTotals}
+              directionAccuracy={DIRECTION_ACCURACY[mode] ?? null}
+              loading={loading}
             />
+            <LedgerChart
+              data={data}
+              loading={loading}
+              selectedMonth={activeMonth}
+              onSelectMonth={setSelectedMonth}
+            />
+            <BreakdownTable data={data} month={activeMonth} />
           </>
         )}
-
-        {/* Empty State */}
-        {/* {!filters.accounts.length && (
-          <div className="text-center text-gray-400 py-16 text-sm">
-            Select at least one account to view the forecast.
-          </div>
-        )} */}
       </div>
     </div>
   );
