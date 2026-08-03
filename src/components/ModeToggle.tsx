@@ -20,9 +20,8 @@ function TabLabel({ text, live }: { text: string; live?: boolean }) {
 
 const OPTIONS: { label: React.ReactNode; value: ForecastMode }[] = [
   { value: "historical", label: <TabLabel text="Historical" /> },
-  { value: "1month", label: <TabLabel text="1-month" /> },
-  { value: "3month", label: <TabLabel text="3-month" /> },
   { value: "live", label: <TabLabel text="Live" live /> },
+  { value: "live3", label: <TabLabel text="Live 3-month" live /> },
 ];
 
 export function ModeToggle({ mode, onChange }: ModeToggleProps) {

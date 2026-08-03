@@ -6,7 +6,8 @@ import { LedgerChart } from "./components/LedgerChart";
 import { ModeToggle } from "./components/ModeToggle";
 import { BreakdownTable } from "./components/BreakdownTable";
 import { LiveForecastCard } from "./components/LiveForecastCard";
-import type { ForecastMode, MonthString } from "./types/cashflow";
+import type { ForecastMode, HistoricalResponse, MonthString } from "./types/cashflow";
+import { Live3ForecastCard } from "./components/Live3ForecastCard";
 
 // Backtest accuracy from the API docs (section 10). Only 1-month mode has a
 // published direction-accuracy figure; swap this for a live value if the
@@ -16,7 +17,7 @@ const DIRECTION_ACCURACY: Partial<Record<ForecastMode, number>> = {
 };
 
 function App() {
-  const [mode, setMode] = useState<ForecastMode>("1month");
+  const [mode, setMode] = useState<ForecastMode>("live");
   const [selectedMonth, setSelectedMonth] = useState<MonthString | null>(null);
 
   const { data, isNoData, loading, error, refetch } = useCashFlowData(mode);
@@ -27,7 +28,6 @@ function App() {
   }, [data]);
 
   const activeMonth = selectedMonth ?? latestMonth;
-  const activeTotals = activeMonth ? data?.totals[activeMonth] ?? null : null;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -39,7 +39,10 @@ function App() {
           </p>
         </div>
 
-        <LiveForecastCard />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
+          <LiveForecastCard />
+          <Live3ForecastCard />
+        </div>
 
         <ModeToggle
           mode={mode}
@@ -60,8 +63,7 @@ function App() {
         {!error && !isNoData && (
           <>
             <KpiRow
-              totals={activeTotals}
-              directionAccuracy={DIRECTION_ACCURACY[mode] ?? null}
+              average={data?.average}
               loading={loading}
             />
             <LedgerChart

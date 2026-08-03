@@ -1,11 +1,10 @@
 import { Card } from "antd";
-import { ArrowLeftRight, TrendingDown, TrendingUp, Target } from "lucide-react";
+import { ArrowLeftRight, TrendingDown, TrendingUp } from "lucide-react";
 import { formatCrores } from "../lib/format";
-import type { Totals } from "../types/cashflow";
+import type { AverageStats, Totals } from "../types/cashflow";
 
 interface KpiRowProps {
-  totals: Totals | null;
-  directionAccuracy?: number | null;
+  average?: AverageStats | null;
   loading?: boolean;
 }
 
@@ -48,11 +47,7 @@ function KpiTile({
   const styles = TONE_STYLES[tone];
 
   return (
-    <Card
-      size="small"
-      variant="borderless"
-      className={`!bg-white border ${styles.border} rounded-xl`}
-    >
+    <Card size="small" variant="borderless" className={`!bg-white border ${styles.border} rounded-xl`}>
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-slate-500">{label}</span>
         <span className={`w-6 h-6 rounded-md flex items-center justify-center ${styles.iconBg} ${styles.iconColor}`}>
@@ -66,40 +61,42 @@ function KpiTile({
   );
 }
 
-export function KpiRow({ totals, directionAccuracy, loading }: KpiRowProps) {
-  const net = totals?.net_cf ?? 0;
+export function KpiRow({ average, loading }: KpiRowProps) {
+  const net = average ? average.avg_net_cf : 0;
+  const arInflow = average ? average.avg_ar_inflow : 0;
+  const apOutflow = average ? average.avg_ap_outflow : 0;
   const netTone: Tone = net >= 0 ? "profit" : "loss";
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-      <KpiTile
-        label="Net cash flow"
-        value={formatCrores(net, { showSign: true })}
-        icon={<ArrowLeftRight size={14} />}
-        tone={netTone}
-        loading={loading}
-      />
-      <KpiTile
-        label="AR inflow"
-        value={formatCrores(totals?.ar_inflow ?? 0)}
-        icon={<TrendingUp size={14} />}
-        tone="profit"
-        loading={loading}
-      />
-      <KpiTile
-        label="AP outflow"
-        value={formatCrores(totals?.ap_outflow ?? 0)}
-        icon={<TrendingDown size={14} />}
-        tone="loss"
-        loading={loading}
-      />
-      <KpiTile
-        label="Direction accuracy"
-        value={directionAccuracy != null ? `${directionAccuracy.toFixed(0)}%` : "—"}
-        icon={<Target size={14} />}
-        tone="neutral"
-        loading={loading}
-      />
+    <div className="mb-6">
+      {average && (
+        <p className="text-xs text-slate-400 mb-2 m-0">
+          Averaged over {average.n_months} month{average.n_months === 1 ? "" : "s"}
+        </p>
+      )}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <KpiTile
+          label={average ? "Avg net cash flow" : "Net cash flow"}
+          value={formatCrores(net, { showSign: true })}
+          icon={<ArrowLeftRight size={14} />}
+          tone={netTone}
+          loading={loading}
+        />
+        <KpiTile
+          label={average ? "Avg AR inflow" : "AR inflow"}
+          value={formatCrores(arInflow)}
+          icon={<TrendingUp size={14} />}
+          tone="profit"
+          loading={loading}
+        />
+        <KpiTile
+          label={average ? "Avg AP outflow" : "AP outflow"}
+          value={formatCrores(apOutflow)}
+          icon={<TrendingDown size={14} />}
+          tone="loss"
+          loading={loading}
+        />
+      </div>
     </div>
   );
 }

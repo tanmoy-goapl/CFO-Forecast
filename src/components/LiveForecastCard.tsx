@@ -4,7 +4,7 @@ import { formatCrores, formatDateTime } from "../lib/format";
 import { useLatestPrediction } from "../hooks/useCashflowData";
 
 export function LiveForecastCard() {
-  const { data, notFound, loading, error, retraining, retrain } = useLatestPrediction();
+  const { data, notFound, loading, error } = useLatestPrediction();
 
   const net = data?.totals.net_cf ?? 0;
   const netColor = net >= 0 ? "text-emerald-600" : "text-rose-600";

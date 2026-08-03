@@ -1,5 +1,7 @@
 import type {
   HistoricalResponse,
+  Latest3NotFound,
+  Latest3PredictionResponse,
   LatestPredictionNotFound,
   LatestPredictionResponse,
   LivePredictionRequest,
@@ -68,7 +70,7 @@ export async function fetchLatestPrediction() {
 export async function triggerLivePrediction(body: LivePredictionRequest = {}) {
   if (USE_MOCK_API) return triggerLivePredictionMock(body);
 
-  const { data } = await apiClient.post<LatestPredictionResponse>(
+  const { data } = await apiClient.post<LatestPredictionResponse | Latest3PredictionResponse>(
     "/api/predict/live",
     body,
   );
@@ -85,6 +87,16 @@ export async function fetchStoreStatus() {
 
   return data;
 }
+
+export async function fetchLatest3Prediction() {
+
+  const { data } = await apiClient.get<Latest3PredictionResponse | Latest3NotFound>(
+    "/api/predictions/latest3",
+  );
+
+  return data;
+}
+
 // V1 code
 
 // const BASE_URL = 'http://10.10.90.91:8061';

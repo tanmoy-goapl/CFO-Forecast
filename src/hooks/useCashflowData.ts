@@ -3,12 +3,14 @@ import {
   fetch1MonthPrediction,
   fetch3MonthPrediction,
   fetchHistorical,
+  fetchLatest3Prediction,
   fetchLatestPrediction,
   triggerLivePrediction,
 } from "../api/cashflowApi";
 import type {
   ForecastMode,
   HistoricalResponse,
+  Latest3PredictionResponse,
   LatestPredictionResponse,
   MonthString,
   NoDataResponse,
@@ -31,6 +33,7 @@ function adaptLiveToSeries(live: LatestPredictionResponse): PredictionResponse {
     by_customer: { [month]: live.by_customer },
     by_vendor: { [month]: live.by_vendor },
     components: { [month]: live.components },
+    average: live.average,
   };
 }
 
@@ -51,6 +54,7 @@ const fetchers: Record<ForecastMode, () => Promise<SeriesResponse>> = {
   "1month": fetch1MonthPrediction,
   "3month": fetch3MonthPrediction,
   live: fetchLiveSeries,
+  live3: fetchLive3Series,
 };
 
 function isNoDataResponse(result: SeriesResponse): result is NoDataResponse {
@@ -98,11 +102,35 @@ export function useCashFlowData(mode: ForecastMode) {
   return { data, isNoData, loading, error, refetch };
 }
 
+function adaptLatest3ToSeries(live3: Latest3PredictionResponse): PredictionResponse {
+  const totals: PredictionResponse["totals"] = {};
+  const by_customer: PredictionResponse["by_customer"] = {};
+  const by_vendor: PredictionResponse["by_vendor"] = {};
+  const components: PredictionResponse["components"] = {};
+
+  for (const month of live3.months) {
+    const f = live3.forecasts[month];
+    totals[month] = f.totals;
+    by_customer[month] = f.by_customer;
+    by_vendor[month] = f.by_vendor;
+    components[month] = f.components;
+  }
+
+  return { generated_at: live3.generated_at, mode: live3.mode, months: live3.months, totals, by_customer, by_vendor, components, average: live3.average };
+}
+
+async function fetchLive3Series(): Promise<SeriesResponse> {
+  const result = await fetchLatest3Prediction();
+  if ("detail" in result) {
+    return { status: "no_data", message: result.detail, requested_month: "0000-00" as MonthString };
+  }
+  return adaptLatest3ToSeries(result);
+}
+
 export function useLatestPrediction() {
   const [data, setData] = useState<LatestPredictionResponse | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [retraining, setRetraining] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -128,22 +156,37 @@ export function useLatestPrediction() {
     load();
   }, [load]);
 
-  const retrain = useCallback(
-    async (mode: "1-month" | "3-month" = "1-month") => {
-      setRetraining(true);
-      setError(null);
-      try {
-        const result = await triggerLivePrediction({ mode });
-        setData(result);
-        setNotFound(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Retrain failed");
-      } finally {
-        setRetraining(false);
-      }
-    },
-    [],
-  );
+  return { data, notFound, loading, error, refetch: load };
+}
 
-  return { data, notFound, loading, error, retraining, retrain, refetch: load };
+export function useLatest3Prediction() {
+  const [data, setData] = useState<Latest3PredictionResponse | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    return fetchLatest3Prediction()
+      .then((result) => {
+        if ("detail" in result) {
+          setNotFound(true);
+          setData(null);
+        } else {
+          setNotFound(false);
+          setData(result);
+        }
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : "Failed to load 3-month prediction");
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { data, notFound, loading, error, refetch: load };
 }
