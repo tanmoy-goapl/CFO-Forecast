@@ -1,6 +1,6 @@
 export type MonthString = `${number}-${number}${number}`; // YYYY-MM
 
-export type ForecastMode = "historical" | "1month" | "3month";
+export type ForecastMode = "historical" | "1month" | "3month" | "live";
 
 export interface Totals {
   ar_inflow: number;

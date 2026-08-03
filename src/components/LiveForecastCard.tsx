@@ -22,19 +22,19 @@ export function LiveForecastCard() {
           <span className="text-sm font-medium text-slate-700">Live forecast</span>
         </span>
       }
-      extra={
-        <Tooltip title="Runs the model live on the latest data (~45-50s)">
-          <Button
-            size="small"
-            className="rounded-lg border-slate-200 text-slate-600 hover:!text-slate-900 hover:!border-slate-300"
-            icon={<RefreshCw size={13} className={retraining ? "animate-spin" : ""} />}
-            loading={retraining}
-            onClick={() => retrain("1-month")}
-          >
-            Retrain
-          </Button>
-        </Tooltip>
-      }
+      // extra={
+      //   <Tooltip title="Runs the model live on the latest data (~45-50s)">
+      //     <Button
+      //       size="small"
+      //       className="rounded-lg border-slate-200 text-slate-600 hover:!text-slate-900 hover:!border-slate-300"
+      //       icon={<RefreshCw size={13} className={retraining ? "animate-spin" : ""} />}
+      //       loading={retraining}
+      //       onClick={() => retrain("1-month")}
+      //     >
+      //       Retrain
+      //     </Button>
+      //   </Tooltip>
+      // }
     >
       {loading && (
         <div className="py-8 flex justify-center">
@@ -66,10 +66,10 @@ export function LiveForecastCard() {
                 {formatCrores(net, { showSign: true })}
               </p>
             </div>
-            <div className="text-right text-xs text-slate-400 leading-relaxed pt-1">
+            {/* <div className="text-right text-xs text-slate-400 leading-relaxed pt-1">
               <p className="m-0">Trained on {data.training_cutoff}</p>
               <p className="m-0">Generated {formatDateTime(data.generated_at)}</p>
-            </div>
+            </div> */}
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 border-t border-slate-100">

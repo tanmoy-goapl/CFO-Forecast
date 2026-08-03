@@ -1,37 +1,40 @@
+import { Segmented } from "antd";
 import type { ForecastMode } from "../types/cashflow";
-
-const OPTIONS: { label: string; value: ForecastMode }[] = [
-  { label: "Historical", value: "historical" },
-  { label: "1-month", value: "1month" },
-  { label: "3-month", value: "3month" },
-];
 
 interface ModeToggleProps {
   mode: ForecastMode;
   onChange: (mode: ForecastMode) => void;
 }
 
+function TabLabel({ text, live }: { text: string; live?: boolean }) {
+  return (
+    <div className="flex items-center justify-center gap-1.5 h-11 text-sm font-medium text-slate-600">
+      {live && <span className="relative flex w-1.5 h-1.5">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+      </span>}
+      {text}
+    </div>
+  );
+}
+
+const OPTIONS: { label: React.ReactNode; value: ForecastMode }[] = [
+  { value: "historical", label: <TabLabel text="Historical" /> },
+  { value: "1month", label: <TabLabel text="1-month" /> },
+  { value: "3month", label: <TabLabel text="3-month" /> },
+  { value: "live", label: <TabLabel text="Live" live /> },
+];
+
 export function ModeToggle({ mode, onChange }: ModeToggleProps) {
   return (
-    <div className="grid grid-cols-3 gap-1 p-1 mb-2 bg-slate-100 rounded-xl">
-      {OPTIONS.map((opt) => {
-        const active = opt.value === mode;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            aria-pressed={active}
-            className={`h-11 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-150 ${
-              active
-                ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
+    <div className="bg-slate-100 border border-slate-200 rounded-xl p-1 mb-4">
+      <Segmented
+        value={mode}
+        onChange={(value) => onChange(value as ForecastMode)}
+        options={OPTIONS}
+        block
+        className="!bg-transparent [&_.ant-segmented-item-label]:!p-0 [&_.ant-segmented-item-label]:!h-11 [&_.ant-segmented-item]:!rounded-lg"
+      />
     </div>
   );
 }
